@@ -1,4 +1,5 @@
 ﻿Imports System.Diagnostics
+Imports System.IO
 Imports System.Media
 
 Public Class Form1
@@ -9,8 +10,10 @@ Public Class Form1
     End Sub
 
     Const sound_file$ = "Shylily - BEEPBEEPBEEPBEEEPBEEP.wav"
-    Dim beep As SoundPlayer
+    Const script_name$ = "script.au3"
     Const interval% = 7 ' in minutes
+
+    Dim beep As SoundPlayer
     Dim end_time As Date
     Dim is_playing As Boolean
 
@@ -19,6 +22,7 @@ Public Class Form1
     End Sub
 
     Sub RestartTimer()
+        ResetBeep()
         btnStart.Enabled = False
         Dim today = Date.Now
         end_time = today.AddMinutes(interval)
@@ -26,7 +30,18 @@ Public Class Form1
     End Sub
 
     Sub CallScript()
-        Process.Start("script.au3")
+        If Not File.Exists(script_name) Then
+            btnStop.PerformClick()
+            MessageBox.Show("Can't find {0}. Timer is stopped automatically.")
+            Exit Sub
+        End If
+
+        Process.Start(script_name)
+    End Sub
+
+    Sub ResetBeep()
+        is_playing = False
+        beep.Stop()
     End Sub
 
     Private Sub tmrTrigger_Tick(sender As Object, e As EventArgs) Handles tmrTrigger.Tick
@@ -41,8 +56,7 @@ Public Class Form1
             Debug.Print(diff.TotalSeconds)
             lblTimeLeft.Text = diff.ToString("mm':'ss")
         Else
-            is_playing = False
-            beep.Stop()
+            ResetBeep()
 
             lblTimeLeft.Text = "00:00"
             CallScript()
@@ -52,6 +66,7 @@ Public Class Form1
 
     Private Sub btnStop_Click(sender As Object, e As EventArgs) Handles btnStop.Click
         btnStart.Enabled = True
+        ResetBeep()
         tmrTrigger.Stop()
     End Sub
 End Class
